@@ -1,0 +1,136 @@
+#
+# Copyright (c) 2021 ooichu
+#
+# This library is free software; you can redistribute it and/or modify it
+# under the terms of the MIT license. See `lifo.c` for details.
+#
+
+# This file is auxiliary library of 'lifo' scripting language.
+# To include it to code you need 'lf_read' this code and then 'lf_eval'
+# resulting chunk.
+
+# All functions provided in this library can be implemented using native C
+# functions, which can significantly improve performance.
+
+# proto: n ++ -> n+1
+# desc: increment top element (number)
+[1 +] "++";
+
+# proto: n -- -> n-1
+# desc: decrement top element (number)
+[1 -] "--";
+
+# proto: a b swp -> b a
+# desc: swap two top elements
+[1 rol] "swp";
+
+# proto: n neg -> -n
+# desc: negate top element (number)
+[0 swp -] "neg";
+
+# proto: a b c rot+ -> c a b
+# desc: rotates to right first 3 elements
+[2 rol] "rot+";
+
+# proto: a b c rot- -> b c a
+# desc: rotates to left first 3 elements
+[-2 rol] "rot-";
+
+# proto: a dup -> a a 
+# desc: duplicates top element
+[0 cpy] "dup";
+
+# proto: a b pop -> a 
+# desc: remove top element
+[0 drp] "pop";
+
+# proto: a b over -> a b a
+# desc: copy and push element over top 
+[1 cpy] "over";
+
+# proto: a qut -> [a]
+# desc: quotes top element
+[0 wrp] "qut";
+
+# desc: symbol 'true', result of condition expressions.
+[[pop]] "&t";
+
+# desc: symbol 'false', result of condition expressions.
+[[1 drp]] "&f";
+
+# proto: a b = -> &t | &f
+# desc: comparsion function, return '&t' if 'a' and 'b' has same value and same
+#       type; or '&f' if not.
+[[&t] [&f] eq] "=";
+
+# proto: a b < -> &t | &f
+# desc: numeric comparsion 'less than', if a < b push '&t', else - '&f'
+[- sgn -1 [&t] [&f] eq] "<";
+
+# proto: a b > -> &t | &f
+# desc: numeric comparsion 'greater than', if a > b push '&t', else - '&f'
+[- sgn +1 [&t] [&f] eq] ">";
+
+# proto: a b <= -> &t | &f
+# desc: numeric comparsion 'less than', if a <= b push '&t', else - '&f'
+[- sgn dup -1 [pop &t] [0 [&t] [&f] eq] eq] "<=";
+
+# proto: a b >= -> &t | &f
+# desc: numeric comparsion 'greater than', if a >= b push '&t', else - '&f'
+[- sgn dup +1 [pop &t] [0 [&t] [&f] eq] eq] ">=";
+
+# proto: x y -> min(x, y)
+# desc: returns minimum of two top elements
+[over over <] "min";
+
+# proto: x y -> max(x, y)
+# desc: returns maximum of two top elements
+[over over >] "max";
+
+# proto: x not -> &t | &f
+# desc: if 'x' is '&t' drops x and push '&f',
+#       if 'x' is '&f' drops x and push '&t',
+#       else undefined behavior.
+[&f &t rot+ apl] "not";
+
+# proto: a b and -> &t | &f
+# desc: if 'a' and 'b' is '&t' drops 'a' and 'b' and pushes '&t',
+#       if 'a' or 'b' is '&f' drops 'a' and 'b' and pushes '&f',
+#       else undefined behavior.
+[swp &f rot+ apl] "and";
+
+# proto: a b or -> &t | &f
+# desc: if 'a' or 'b' is '&t' drops 'a' and 'b' and pushes '&t',
+#       if 'a' and 'b' is '&f' dros 'a' and 'b' and pushes '&f',
+#       else undefined behavior.
+[swp &t swp apl] "or";
+
+# proto: cond [then] [else] if -> [then] apl | [else] apl
+# desc: 'if' statement, works simillar to other languages.
+#       'cond' must be '&t' or '&f' value.
+[rot+ apl apl] "if";
+
+# proto: cond [body] then
+# desc:  if cond is '&t', then body evaluated.
+[[] if] "then";
+
+# proto: cond [body] else
+# desc:  if cond is '&f', then body evaluated.
+[[] swp if] "else";
+
+# proto: an ... a1 a0 n rev -> a0 a1 ... an a(n+1)
+# desc: reverses sequence of elements from top to n
+[wrp pul pop] "rev";
+
+# proto: a [b0 b1 ... bn] lop -> b0 b1 ... bn n a
+# desc: pull list with reverse and swap top two
+[pul dup dup ++ neg rol wrp pul rol] "lop";
+
+# proto: [a] [b] cat -> [a b]
+# desc: concatenates top two lists
+[lop lop + -- wrp] "cat";
+
+# proto: [cond] [body] loop
+# desc: while cond is &t body repeating
+[1 rf 1 rf swp 1 wrp [loop] cat cat qut [then] cat cat apl] "loop";
+
