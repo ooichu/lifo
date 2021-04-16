@@ -1,4 +1,4 @@
-F = -std=c89 -m32 -Wall -Wextra -pedantic -DLF_STANDALONE -lm -O3
+F = -std=c89 -Wall -Wextra -pedantic -DLF_STANDALONE -lm -O3
 CC = gcc
 
 build:
@@ -9,4 +9,3 @@ run:
 
 clean:
 	rm lifo
-
