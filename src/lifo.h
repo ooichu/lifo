@@ -46,13 +46,12 @@ typedef enum lf_sig
 }
 lf_sig;
 
-typedef long lf_int;
-typedef double lf_num;
-typedef union lf_val lf_val;
+typedef int lf_int;
+typedef float lf_num;
+typedef union lf_ref lf_ref;
 typedef struct lf_obj lf_obj;
 typedef struct lf_str lf_str;
 typedef struct lf_chk lf_chk;
-typedef struct lf_ref lf_ref;
 typedef struct lf_ctx lf_ctx;
 typedef char (*lf_rdfn)(void* rdat);
 typedef void (*lf_wrfn)(void* wdat, char c);

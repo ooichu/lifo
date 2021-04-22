@@ -27,20 +27,6 @@
 #include <setjmp.h>
 #include <string.h>
 
-union lf_val
-{
-	lf_obj* obj;
-	lf_num  num;
-	lf_ntv  ntv;
-	lf_str* str;
-	struct
-	{
-		void* dat;
-		lf_fin fin;
-	}
-	usr;
-};
-
 struct lf_obj
 {
 	lf_type type;
@@ -48,11 +34,11 @@ struct lf_obj
 	lf_obj* next;
 };
 
-#define usr(o) ((o)->ref->val.usr)
-#define num(o) ((o)->ref->val.num)
-#define ntv(o) ((o)->ref->val.ntv)
-#define str(o) ((o)->ref->val.str)
-#define obj(o) ((o)->ref->val.obj)
+#define usr(o) ((o)->ref->usr)
+#define num(o) ((o)->ref->num.val)
+#define ntv(o) ((o)->ref->ntv.val)
+#define str(o) ((o)->ref->str.val)
+#define obj(o) ((o)->ref->obj.val)
 
 struct lf_chk
 {
@@ -61,10 +47,14 @@ struct lf_chk
 	lf_chk* next;  /* next chunk */
 };
 
-struct lf_ref
+union lf_ref
 {
 	unsigned cnt; /* count of references */
-	lf_val val;   /* reference value */
+	struct { unsigned cnt; lf_obj* val; } obj;
+	struct { unsigned cnt; lf_num  val; } num;
+	struct { unsigned cnt; lf_ntv  val; } ntv;
+	struct { unsigned cnt; lf_str* val; } str;
+	struct { unsigned cnt; void* dat; lf_fin fin; } usr;
 };
 
 struct lf_ctx
@@ -466,7 +456,7 @@ static void finish_chk(lf_ctx* ctx, lf_chk** chk)
 	lf_obj* list = (lf_obj*)*chk;
 	/* Init reference */
 	ref->cnt = 1;
-	ref->val.obj = (*chk)->head;
+	ref->obj.val = (*chk)->head;
 	/* Make valid list */
 	list->type = LF_TLST;
 	list->ref = ref;
@@ -692,7 +682,7 @@ static lf_obj* make_cpy(lf_ctx* ctx, const lf_obj* obj)
 		case LF_TNUM:
 			cpy = make_obj(ctx);
 			cpy->type = obj->type;
-			cpy->ref->val = obj->ref->val;
+			cpy->ref->usr = obj->ref->usr;
 			break;
 	}
 	cpy->next = NULL;
@@ -1381,25 +1371,21 @@ static void repl(lf_ctx* ctx)
 	}
 }
 
-static int dofile(lf_ctx* ctx, const char* filename)
+static void dofile(lf_ctx* ctx, const char* filename)
 {
-	int success = 1;
 	FILE* fp = fopen(filename, "r");
 	lf_chk* chk = NULL;
 	if (fp != NULL)
 	{
-		if (lf_read(ctx, &chk, (void*)fp) != LF_SOK || lf_eval(ctx, chk) != LF_SOK)
-		{
-			success = 0;
-		}
+		lf_read(ctx, &chk, fp);
+		lf_eval(ctx, chk);
+		lf_wipe(ctx, &chk);
+		fclose(fp);
 	}
 	else
 	{
 		fprintf(stdout, "error: failed on load '%s' file!\n", filename);
-		success = 0;
 	}
-	fclose(fp);
-	return success;
 }
 
 int main(int argc, char** argv)
@@ -1413,10 +1399,7 @@ int main(int argc, char** argv)
 	lf_map_mem(&ctx, heap, sizeof(heap));
 	lf_cfg_io(&ctx, readfn, writefn, stdout);
 
-	if (!dofile(&ctx, "lib.lf"))
-	{
-		fprintf(stdout, "error: failed on load 'lib.lf'\n");
-	}
+	dofile(&ctx, "lib.lf");
 
 	switch (argc)
 	{
