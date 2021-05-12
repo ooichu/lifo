@@ -329,7 +329,7 @@ static void* make_block(lf_ctx* ctx)
 	void* block;
 	while (ctx->free == NULL)
 	{
-		lf_raise(ctx, LF_SENOMEM, "enough memory");
+		lf_raise(ctx, LF_SMEMOUT, "memory out");
 	}
 	block = ctx->free;
 	ctx->free = ctx->free->next;

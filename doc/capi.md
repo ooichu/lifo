@@ -40,7 +40,7 @@ Signals are like exceptions in many modern languages. There is a fixed number of
 2. `LF_SUNFCHK` -- unfinished chuk (caused when list isn't closed);
 3. `LF_SPRSERR` -- error while parsing the code;
 4. `LF_SRUNERR` -- error on runtime;
-5. `LF_SENOMEM` -- enough memory;
+5. `LF_SMEMOUT` -- memory out;
 6. `LF_SOVRFLW` -- stack overflow (trying access element by negative index); 
 7. `LF_SUNDFLW` -- stack underflow (trying access element by invalid index);
 8. `LF_SERR`-- reserved for other errors.

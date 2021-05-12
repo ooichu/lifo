@@ -38,7 +38,7 @@ typedef enum lf_sig
 	LF_SUNFCHK, /* signal 'unfinished chunk' */
 	LF_SPRSERR, /* signal 'parse error' */
 	LF_SRUNERR, /* signal 'runtime error' */	
-	LF_SENOMEM, /* signal 'enough memory' */
+	LF_SMEMOUT, /* signal 'memory out' */
 	LF_SOVRFLW, /* signal 'stack overflow' */
 	LF_SUNDFLW, /* signal 'stack underflow' */
 	LF_SINIERR, /* signal 'initialization error' */
